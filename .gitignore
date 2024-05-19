@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/if-vmu-publications/node_modules
 /.pnp
 .pnp.js
 
