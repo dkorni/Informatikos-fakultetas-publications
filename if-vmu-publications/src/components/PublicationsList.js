@@ -10,11 +10,12 @@ const PublicationsList = ({ publications, currentPage, totalItems, itemsPerPage,
 
   return (
     <div>
+      <p>Now showing {((currentPage) * itemsPerPage) + 1} - {Math.min((currentPage+1) * itemsPerPage, totalItems)} of {totalItems}</p>
+
       {publications.map((pub, index) => (
         <Publication key={index} {...pub} />
       ))}
       <div className="d-flex justify-content-between align-items-center mt-4">
-        <p>Now showing {((currentPage) * itemsPerPage) + 1} - {Math.min((currentPage+1) * itemsPerPage, totalItems)} of {totalItems}</p>
         <div>
           <button
             className="btn btn-secondary me-2"
