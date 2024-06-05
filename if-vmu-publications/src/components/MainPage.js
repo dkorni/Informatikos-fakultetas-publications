@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import SearchBar from './SearchBar';
 import PublicationsList from './PublicationsList';
+import FilterColumn from './FilterColumn';
 import PublicationModel from '../models/PublicationModel';
+import getFilterQueryParams from '../functions/GetFilterQueryParams';
 
-const requestUrl = "https://localhost:7165/fetch";
+const baseURL = "https://localhost:7165/fetch";
+const defaultSearcUrl = "search/objects?sort=dc.date.issued,DESC&page={page}&size={size}&configuration=RELATION.OrgUnit.publications&scope=f3a15186-d000-4e14-a914-98581cb2db52{filter}&embed=thumbnail&embed=item%2Fthumbnail&embed=item%2Fthumbnail%2FaccessStatus";
+const getFiltersURL = "facets?&configuration=RELATION.OrgUnit.publications&scope=f3a15186-d000-4e14-a914-98581cb2db52{filter}";
 
 const MainPage = () => {
 
@@ -12,21 +16,57 @@ const MainPage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [itemsPerPage, setitemsPerPage] = useState(10);
+  const [filters, setFilters] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState({});
 
   useEffect(() => {
+    fetchFilters();
     handleSearch(searchQuery);
     console.log("Use effect");
-  }, [currentPage]);
+  }, [currentPage, selectedFilters]);
+
+  const fetchFilters = async () => {
+
+    var flt = getFilterQueryParams(selectedFilters);
+
+    var query = getFiltersURL;
+
+    query = query.replace("{filter}", flt)
+
+    query = encodeURI(query);
+
+    const response = await fetch(baseURL, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'query': query
+      },
+    });
+    const data = await response.json();
+    setFilters(data._embedded.facets);
+  };
+
+
 
   const handleSearch = async (query) => {
    
     var publicationsList = [];
 
-    var response = await fetch(requestUrl+"?page="+(currentPage)+"&size="+itemsPerPage, {
+    var query = defaultSearcUrl.replace("{page}", currentPage).replace("{size}", itemsPerPage);
+
+    var flt = getFilterQueryParams(selectedFilters);
+
+    query = query.replace("{filter}", flt)
+
+    query = encodeURI(query);
+
+    var response = await fetch(baseURL, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-      },});
+        'query':query
+      },
+    });
   
 
     var body = await response.json()
@@ -118,16 +158,27 @@ const MainPage = () => {
     console.log(currentPage);
   }
 
+  const handleFilterChange = (updatedFilters) => {
+    setSelectedFilters(updatedFilters);
+  };
+
   return (
     <div className="container">
       <h1 className="my-4">Informatikos fakultetas / Faculty of Informatics Publications</h1>
-      <PublicationsList
-        publications={publications}
-        currentPage={currentPage}
-        totalItems={totalItems}
-        itemsPerPage={itemsPerPage}
-        onPageChange={UpdatePage}
-      />
+      <div className="row">
+        <div className="col-md-3">
+          <FilterColumn filters={filters} onFilterChange={handleFilterChange} />
+        </div>
+        <div className="col-md-9">
+        <PublicationsList
+            publications={publications}
+            currentPage={currentPage}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            onPageChange={UpdatePage}
+          />
+        </div>
+      </div>
     </div>
   );
 };

@@ -16,9 +16,9 @@ namespace FetchJsonApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery]int page, [FromQuery]int size)
+        public async Task<IActionResult> Get([FromHeader] string query)
         {
-            var url = $"https://portalcris.vdu.lt/server/api/discover/search/objects?sort=dc.date.issued,DESC&page={page}&size={size}&configuration=RELATION.OrgUnit.publications&scope=f3a15186-d000-4e14-a914-98581cb2db52&embed=thumbnail&embed=item%2Fthumbnail&embed=item%2Fthumbnail%2FaccessStatus";
+            var url = Path.Combine($"https://portalcris.vdu.lt/server/api/discover/", query);
             var response = await _httpClient.GetAsync(url);
 
             if (response.IsSuccessStatusCode)
